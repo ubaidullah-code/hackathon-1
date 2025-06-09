@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 // import { useAuth } from '../../contexts/AuthContext';
-import { Users, Calendar, UserCheck, User, Shield, Edit, Trash, LoaderCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Calendar, UserCheck, User, Shield, Edit, Trash, LoaderCircle, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { collection, doc, getFirestore, onSnapshot, query, updateDoc } from 'firebase/firestore';
 
 const AdminDashboard = () => {
@@ -73,7 +73,7 @@ useEffect(() => {
 
     
  const EventCheckUpdating = async(check , decision)=>{
-  console.log(check , decision)
+  
   setShowUserModal(false)
   const userDocRef = doc(db, 'events', check.eventId);
   await updateDoc(userDocRef, {
@@ -88,11 +88,18 @@ useEffect(() => {
   const ApprovedEvent = (event) => {
     setShowUserModal(true);
     // setEvents(prev => prev.filter(event => event.id !== eventId));
-    console.log("event", event)
+
 
     setSelectedUser(event);
   };
-
+  const [detailModal, setDetailModal] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const detailOfEvent = (eventDetail)=>{
+    setDetailModal(true)
+   
+   setSelectedEvent(eventDetail)
+  }
+console.log(selectedEvent)
   // Stats
   const totalUsers = users.length;
   const totalEventManagers = users.filter(u => u.eventMadeBy === 'event_manager').length;
@@ -217,15 +224,7 @@ useEffect(() => {
     : user.joinDate}
 </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {/* <button 
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowUserModal(true);
-                          }} 
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button> */}
+                        
                         <button 
                           onClick={() => handleDeleteUser(user.id)} 
                           className="text-red-600 hover:text-red-900"
@@ -301,11 +300,13 @@ useEffect(() => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button 
                           onClick={()=>ApprovedEvent(event)} 
-                          // setSelectedUser(user);
-                            // setShowUserModal(true);
-                          className="text-blue-600 hover:text-blue-900"
+                          
+                          className="text-blue-600 hover:text-blue-900 mr-2"
                         >
                          <Edit className="h-4 w-4" />
+                        </button> 
+                        <button className="text-purple-600 hover:text-purple-900 " onClick={()=>detailOfEvent( event)}>
+                        <FileText className="h-4 w-4 " />
                         </button>
                       </td>
                     </tr>
@@ -320,10 +321,11 @@ useEffect(() => {
       {/* User Edit Modal */}
       {showUserModal && selectedUser && (
         <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+        
           <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={() => setShowUserModal(false)}></div>
           
           <div className="relative bg-white rounded-lg max-w-md w-full mx-auto p-6 shadow-xl">
-            <h3 className="text-xl font-bold mb-4">Change User Role</h3>
+            <h3 className="text-xl font-bold mb-4">Approvded the Events</h3>
             
             <div className="mb-4">
               <p className="text-sm text-gray-600">User: <span className="font-medium">{selectedUser?.manegerName}</span></p>
@@ -378,6 +380,85 @@ useEffect(() => {
             </div>
           </div>
         </div>
+      )}
+        {detailModal && selectedEvent && (
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+  <div
+    className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+    onClick={() => setDetailModal(false)}
+  ></div>
+
+  <div className="relative bg-white rounded-lg max-w-md w-full mx-auto p-6 shadow-xl">
+    <h3 className="text-xl font-bold mb-4">Event Details</h3>
+
+    <div className="mb-4">
+      <p className="text-sm text-gray-600">
+        Created by: <span className="font-medium">{selectedEvent?.manegerName}</span>
+      </p>
+      <p className="text-sm text-gray-600">
+        Email: <span className="font-medium">{selectedEvent?.userEmail}</span>
+      </p>
+      <p className="text-sm text-gray-600 mt-2">
+        Role:
+        <span
+          className={`ml-1 font-medium ${
+            selectedEvent?.eventMadeBy === 'admin'
+              ? 'text-red-600'
+              : selectedEvent?.eventMadeBy === 'event_manager'
+              ? 'text-purple-600'
+              : 'text-blue-600'
+          }`}
+        >
+          {selectedEvent?.eventMadeBy === 'admin'
+            ? 'Admin'
+            : selectedEvent?.eventMadeBy === 'event_manager'
+            ? 'Event Manager'
+            : 'User'}
+        </span>
+      </p>
+    </div>
+
+    <div className="mb-6 space-y-2">
+      <p className="text-sm text-gray-700">
+        <span className="font-semibold">Event Name:</span> {selectedEvent?.title}
+      </p>
+      <p className="text-sm text-gray-700">
+        <span className="font-semibold">Date:</span> {selectedEvent?.eventDate}
+      </p>
+      <p className="text-sm text-gray-700">
+        <span className="font-semibold">Location:</span> {selectedEvent?.eventLocation}
+      </p>
+      <p className="text-sm text-gray-700">
+        <span className="font-semibold">Description:</span> {selectedEvent?.eventDescription}
+      </p>
+      {selectedEvent?.registrations&&(
+        <p className="text-sm text-gray-700">
+         <span className="font-semibold">Registrations:</span> {selectedEvent?.registrations}
+        </p>
+      )}
+
+      {selectedEvent?.postFile && (
+        <div className="mt-4">
+          <img
+            src={selectedEvent.postFile}
+            alt="Event"
+            className="w-full h-52 object-cover rounded-lg shadow"
+          />
+        </div>
+      )}
+    </div>
+
+    <div className="flex justify-end">
+      <button
+        onClick={() => setDetailModal(false)}
+        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
       )}
     </div>
   );

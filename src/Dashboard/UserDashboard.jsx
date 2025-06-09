@@ -129,7 +129,7 @@ const UserDashboard = () => {
         registrations: increment(1)
       });
 
-      console.log('Registration successful for event:', selectedEventForRegistration.title);
+      // console.log('Registration successful for event:', selectedEventForRegistration.title);
       // alert(`Successfully registered for ${selectedEventForRegistration.title}!`);
       Swal.fire({
   title: `Successfully registered for ${selectedEventForRegistration.title}!`,
